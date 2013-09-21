@@ -145,4 +145,68 @@ Make sure your implementation works locally!
 
 ### Deploy on Amazon ###
 
-TODO
+Launching an instance:
+
+1. Login, select EC2 instances and make sure to select an appropriate region
+2. Launch an instance, "Ubuntu Server 12.04.2 LTS"
+3. Select instance type
+4. No "Advanced Instance Options"
+5. No "Storage Device Configuration"
+6. Specify instance name 
+7. Create a new keypair (or use an existing if you have one!)
+8. Use an existing security group with SSH access
+9. Launch!
+
+If you created a new keypair:
+
+1. Move the `pem` file to `~/.ssh/lab.pem`
+2. `chmod 600 ~/.ssh/lab.pem`
+
+Connecting to your instance:
+
+	ssh -i ~/.ssh/lab.pem ubuntu@<hostname>
+
+Preparing the instance:
+
+	sudo apt-get update
+	sudo apt-get install openjdk-7-jre-headless
+
+Build, deploy and run:
+
+	mvn package
+	scp -i ~/.ssh/lab.pem target/throttling-1.0-SNAPSHOT.one-jar.jar ubuntu@<hostname>:
+	ssh -i ~/.ssh/lab.pem ubuntu@<hostname> "java -jar throttling-1.0-SNAPSHOT.one-jar.jar com.jayway.throttling.impl.memcached.Memcached"
+
+You are ofcourse free to create scripts, change pom.xml to handle automatic deployment, use ssh config or whatever you feel is convinient for you.
+
+### Running JMeter ###
+
+Generating load using JMeter is easy. However, it may be useful to run the tests on the same local network as
+your server is running on, to avoid introducing latency. The following process can both be run locally and 
+on a separate Amazon EC2 instance. It generates load by calling `multi` as specified above.
+
+Download and unzip JMeter to $JMETER_HOME.  `cd jmeter` in the root of this project. Run load test using the following command:
+
+	$JMETER_HOME/bin/jmeter -n -l results.jtl -t load.jmx -p jmeter.properties
+
+This does the following:
+
+* `-n` means non-gui
+* `-l results.jtl` means write result to results.jtl (this can later be loaded and visualized using JMeter UI)
+* `-t load.jmx` means run the tests specified in the file load.jmx
+* `-p jmeter.properties` configures jmeter using the provided properties (simply to enable summaries on the command line)
+
+The following parameters can be used to configure the load. 
+
+* `-Dhost=localhost` is the hostname for the web server
+* `-Dport=8080` is the port for the web server
+* `-Dthreads=40` is the number of threads jmeter will use
+* `-DloopCount=1000` is the number of calls to `multi` each thread will perform
+* `-DcallsPerMulti=100` is the number of calls to the ThrottlingService that will be done per request
+* `-Daccounts=1000` is the number of random accounts used for calling multi.
+* `-DintervalInSeconds=60` is the TTL for a counter
+* `-DcreditsPerInterval=100` is the number of credits an account have during an interval
+* `-Dcost=1` is the cost of a call
+
+Notice that the total number of calls to ThrottlingService is `threads * loopCount * callsPerMulti`, that is 4.000.000 calls with the default settings. My developer machine handles around 30-40.000 calls per second, which means 300-400 requests to `multi` with the default 100 calls each.
+
