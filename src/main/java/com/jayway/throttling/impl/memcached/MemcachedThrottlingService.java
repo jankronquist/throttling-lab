@@ -16,6 +16,13 @@ public class MemcachedThrottlingService implements ThrottlingService {
         this.client = client;
     }
 
+    /**
+     * A cached value that is decreased using decr until it reaches 0, then
+     * throttles all requests until the value is expired from the cache.
+     * 
+     * Notice that decr never makes the value go below 0 and that -1 is used to
+     * indicate no value.
+     */
     @Override
     public boolean allow(String account, long cost, Callable<Interval> newInterval) {
         long result = client.decr(account, cost);
