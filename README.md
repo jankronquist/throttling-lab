@@ -2,7 +2,7 @@ This is a lab to explore various clustering solutions, mostly key/value stores.
 To do something interesting we implement throttling.
 
 Please note that this is not intended as a production grade throttling library. 
-The primary purpose is to explore and give an understanding of clustering.
+The primary purpose is to explore and give an understanding of clustered state.
 Therefore, the design and implementation mostly favours simplicity before anything else.
 
 Get started
@@ -154,7 +154,7 @@ Launching an instance:
 5. No "Storage Device Configuration"
 6. Specify instance name 
 7. Create a new keypair (or use an existing if you have one!)
-8. Use an existing security group with SSH access
+8. Use an existing security group with SSH access ("Lab")
 9. Launch!
 
 If you created a new keypair:
@@ -177,7 +177,7 @@ Build, deploy and run:
 	scp -i ~/.ssh/lab.pem target/throttling-1.0-SNAPSHOT.one-jar.jar ubuntu@<hostname>:
 	ssh -i ~/.ssh/lab.pem ubuntu@<hostname> "java -jar throttling-1.0-SNAPSHOT.one-jar.jar com.jayway.throttling.impl.memcached.Memcached"
 
-You are ofcourse free to create scripts, change pom.xml to handle automatic deployment, use ssh config or whatever you feel is convinient for you.
+You are of course free to create scripts, change pom.xml to handle automatic deployment, use ssh config or whatever you feel is convenient for you.
 
 ### Running JMeter ###
 
@@ -210,3 +210,15 @@ The following parameters can be used to configure the load.
 
 Notice that the total number of calls to ThrottlingService is `threads * loopCount * callsPerMulti`, that is 4.000.000 calls with the default settings. My developer machine handles around 30-40.000 calls per second, which means 300-400 requests to `multi` with the default 100 calls each.
 
+### Failover test ###
+
+Since the default memcached implementation has an embedded jmemcached we can easily set up a cluster that shares data:
+
+	ssh -i ~/.ssh/lab.pem ubuntu@<server1> "java -jar throttling-1.0-SNAPSHOT.one-jar.jar -Dmemcached.servers="server1.com:11211,server2:11211"  com.jayway.throttling.impl.memcached.Memcached"
+	ssh -i ~/.ssh/lab.pem ubuntu@<server2> "java -jar throttling-1.0-SNAPSHOT.one-jar.jar -Dmemcached.servers="server1.com:11211,server2:11211"  com.jayway.throttling.impl.memcached.Memcached"
+
+Now you can create some accounts and set the value of the counter, for example by initializing it very low and make sure it has been throttled. Kill one of the webservers. Make some calls and see if every account is still throttled. What is going on?
+
+You can also perform a similar test while creating load using jmeter. What happens when you shut down one of the webservers? Make sure your load is generated to other one!
+
+Perform similar investigations for your own implementation, ie without the embedded jmemcached. 
