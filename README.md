@@ -214,8 +214,8 @@ Notice that the total number of calls to ThrottlingService is `threads * loopCou
 
 Since the default memcached implementation has an embedded jmemcached we can easily set up a cluster that shares data:
 
-	ssh -i ~/.ssh/lab.pem ubuntu@<server1> "java -jar throttling-1.0-SNAPSHOT.one-jar.jar -Dmemcached.servers="server1.com:11211,server2:11211"  com.jayway.throttling.impl.memcached.Memcached"
-	ssh -i ~/.ssh/lab.pem ubuntu@<server2> "java -jar throttling-1.0-SNAPSHOT.one-jar.jar -Dmemcached.servers="server1.com:11211,server2:11211"  com.jayway.throttling.impl.memcached.Memcached"
+	ssh -i ~/.ssh/lab.pem ubuntu@<server1> "java -jar throttling-1.0-SNAPSHOT.one-jar.jar -Dmemcached.servers="server1.com:11211,server2:11211" -Djmemcached.enabled=true com.jayway.throttling.impl.memcached.Memcached"
+	ssh -i ~/.ssh/lab.pem ubuntu@<server2> "java -jar throttling-1.0-SNAPSHOT.one-jar.jar -Dmemcached.servers="server1.com:11211,server2:11211" -Djmemcached.enabled=true com.jayway.throttling.impl.memcached.Memcached"
 
 Now you can create some accounts and set the value of the counter, for example by initializing it very low and make sure it has been throttled. Kill one of the webservers. Make some calls and see if every account is still throttled. What is going on?
 
