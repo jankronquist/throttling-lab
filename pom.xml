@@ -29,9 +29,9 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>net.spy</groupId>
+			<groupId>com.amazonaws.spy</groupId>
 			<artifactId>spymemcached</artifactId>
-			<version>2.9.0</version>
+			<version>1.0.1</version>
 		</dependency>
 		<!-- common infrastructure -->
 		<dependency>
